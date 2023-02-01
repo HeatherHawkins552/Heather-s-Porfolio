@@ -1,0 +1,34 @@
+---
+title: "Groups"
+author: "Heather Hawkins"
+date: "2023-01-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+```
+
+---
+``` {R start}
+
+library(readxl)
+Cross_Cult_Groups <- read_excel("~/Documents/GitHub/Project-1/Cross-Cult Groups.xls")
+View(Cross_Cult_Groups)
+``` 
+## R Markdown
+
+
+``` {R data-}
+head(Cross_Cult_Groups, n=30)
+``` 
+
+``` {R group1}
+random_G1<- Cross_Cult_Groups %>% 
+  group_by(Name) %>% 
+  summarise() %>% 
+  sample_n(30) %>% 
+  mutate(unique_id=1:NROW(.))
+ 
+random_G1
+``` 
+

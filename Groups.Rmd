@@ -1,11 +1,8 @@
 ---
-title: "Groups"
+title: "Randomizing Student Groups"
 author: "Heather Hawkins"
-date: "2023-01-31"
-output:
-  html_document: default
-  word_document: default
-  pdf_document: default
+date: "2023-02-07"
+output: github_document 
 ---
 
 ```{r setup, include=FALSE}
@@ -23,14 +20,14 @@ library(readxl)
 Cross_Cult_Groups <- read_excel("~/Documents/GitHub/Project-1/Cross-Cult Groups.xls")
 View(Cross_Cult_Groups)
 ``` 
-## R Markdown Part 1
+## Randomizing Part 1
 
 Seeing if the data works and if everything is there.
 
 ``` {R data-}
 head(Cross_Cult_Groups, n=30)
 ``` 
-## R Markdown Part 2
+## Randomizing Part 2
 
 Randomizing students by name, setting a seed to keep the randomization that was given. 
 
@@ -52,6 +49,10 @@ random_G_Final <- cbind(random_G, ID)
 
 view(random_G_Final)
 ```
+
+
+## Analyzing Data
+
 
 ```{r Groups_boxplot}
 ggplot(data = random_G_Final, aes(x= ID)) +

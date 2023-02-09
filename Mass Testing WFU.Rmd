@@ -1,0 +1,15 @@
+---
+title: "Untitled"
+author: "Heather Hawkins"
+date: "2023-02-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Counterfactual Potency at WFU
+
+```
+

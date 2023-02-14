@@ -6,10 +6,57 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+#Loading Libraries
+library(dplyr)
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(tidyverse)
 ```
 
 ## Counterfactual Potency at WFU
 
+```{R Adding Data}
+library(haven)
+CounterFactual_Mass_Testing <- read_sav("~/Documents/GitHub/Project-1/CounterFactual- Mass Testing.sav")
+View(CounterFactual_Mass_Testing)
+```
+
+```{R Grouping-by-Gender}
+#1= male, 2= female
+
+CFMT_G <- CounterFactual_Mass_Testing %>%
+  filter(!is.na(Gender), Gender!="5")
+
+CFMT_G %>%
+  group_by(Gender) %>% summarise(Gender = n())
+
+#Labeling Gender
+CFMT_G <- CFMT_G %>%
+  # Rename 1 to Male, 2 to Female
+  mutate(Gender = recode(Gender, "1" = "Male", "2" = "Female"))
+
+
+CFMT_G %>%
+  ggplot(aes(x=CoTh3Number))+
+  geom_bar()+ facet_wrap(~Gender)+ labs (x= "Number of Counterfactuals", y= "Number of People") 
+```
+
+```{R p-n counterfactuals}
+
+CFMT_G %>%
+  ggplot (aes(x=Gender))+
+  geom_bar()+ facet_wrap(~CoTh4UP)+ labs (x= "Gender", y= "Number of People") 
+
+```
+```{R age}
+
+#Labeling Counterfactuals
+CFMT_G <- CFMT_G %>%
+  # Rename 1 to Upward, 2 to Downward
+  mutate(CoTh4UP = recode(CoTh4UP, "1" = "Upward", "0" = "Downward"))
+CFMT_G %>%
+  ggplot(aes(x=Age))+
+  geom_bar()+ facet_wrap(~CoTh4UP)+ labs (x= "Age", y= "Number of People") 
+```
 ```
 

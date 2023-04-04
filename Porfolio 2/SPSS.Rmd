@@ -1,0 +1,63 @@
+---
+title: "3- SPSP"
+author: "Heather Hawkins"
+date: "2023-02-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#### remotes::install_github("jonocarroll/ggeasy")
+
+```{r cars}
+library(tidyverse) 
+library(ggeasy) 
+library(dsbox) 
+library(ggplot2)
+library(skimr)
+library(haven)
+CulpAndCount <- read_sav("~/Downloads/Situational-assessment Study_February 15, 2023_22.16.sav")
+
+#view class of data
+class(CulpAndCount)
+
+
+#display dimensions of data frame
+dim(CulpAndCount)
+
+
+#view first six rows of data
+head(CulpAndCount)
+
+#
+```
+
+```{R 2x2x2 ANOVA}
+
+#Labeling SCENARIO, Agency, and Choice. 
+
+CulpAndCount$Scenario <- factor(CulpAndCount$Scenario,
+levels = c(1,2),
+labels = c("Bars/Resturants", "Delivery Workers"))
+
+CulpAndCount$Agency_L <- factor(CulpAndCount$Agency_L,
+levels = c(1,2),
+labels = c("Low Agency", "High Agency"))
+
+CulpAndCount$Choice <- factor(CulpAndCount$Choice,
+levels = c(1,2),
+labels = c("Keep Close/Allow", "Reopen/Not Allow"))
+
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Choice, y= Culpab, fill= Agency_L))+ facet_wrap(~Scenario)+geom_bar(stat="identity", position=position_dodge())+labs (x= "Choice", y= "Culpability")+labs(fill="Level of Agency")+ scale_fill_manual(values = c("black", "gold4"))+ labs(title= "2x2x2 ANOVA")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+
+```
+

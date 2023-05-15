@@ -1,0 +1,90 @@
+---
+title: "MTG list"
+author: "Heather Hawkins"
+date: "2023-05-15"
+output: html_document
+---
+
+```{r load-packages, message = FALSE}
+library(rvest)
+library(skimr)
+library(glue)
+library(tidyverse) 
+library(usethis)
+library(robotstxt)
+```
+
+Because I love Magic the Gathering and I want to look at the new set, I decided to scrape the tcgplayer page of info to look at cards at a glance. 
+
+```{r setup, include=FALSE}
+
+# First we need to set the url
+
+url <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page=1"
+
+#now make a function for this
+
+scrape_page <- function(url) {
+
+  #Then learn to read the url
+  
+page <- read_html(url)
+
+# I want to know the title, rarity, and price of each card, so I used Selector Gadget to grab the html.nodes.
+
+titles <- page %>%
+  html_nodes(".search-result__title")  %>%
+  html_node("") %>%
+  html_text() %>% 
+  str_squish()
+
+rarity <- page %>%
+  html_nodes(".search-result__rarity span:nth-child(1)") %>%
+  html_text()
+
+price <- page %>%
+  html_nodes(".inventory__price-with-shipping") %>%
+  html_text()
+
+#It seemed to have collected it so lets create a tibble
+
+  tibble(title = titles, 
+         rarity = rarity,
+         price = price)
+  
+}
+
+# Now lets grab all of the pages in this set
+
+root <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page="
+numbers <- seq(from = 1, to = 23, by = 1)
+urls <- glue("{root}{numbers}")
+
+#and now make a dataframe
+phyrexia_mtg.df <- map_dfr(urls, scrape_page)
+
+write_csv(phyrexia_mtg.df, file = "phyrexia_mtg.csv")
+
+phyrexia_mtg <- read_csv("phyrexia_mtg.csv")
+
+```
+...The dataframe is empty. Idk what happened. 
+Lets just try a single page. 
+
+```{r onepage}
+
+root <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page="
+numbers1 <- seq(from = 1, to = 1, by = 1)
+urls1 <- glue("{root}{numbers1}")
+
+#and now make a dataframe
+phyrexia_mtg.df.1 <- map_dfr(urls, scrape_page)
+
+write_csv(phyrexia_mtg.df.1, file = "phyrexia_mtg.csv")
+
+phyrexia_mtg <- read_csv("phyrexia_mtg.csv")
+```
+Im gonna cry idk what happened. Its not grabbing the info.... I assume the website will not let me grab the info, or there is something else wrong. 
+
+Idk :( Ill retry this in another project
+

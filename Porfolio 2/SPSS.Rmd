@@ -5,11 +5,17 @@ date: "2023-02-16"
 output: html_document
 ---
 
+I wanted to make a nice clean visual for my SPSS poster, so I decided to do this in R. 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Loading Packages and Data
+
+My poster was about my first year project. It was a replication of another study that focused on Culpability and Agency. Everything was related to COVID. There were 2 scenarios, Bars and resturants (where students had to choose (high agency) or were told (low agency) to reopen them or close them) and delivery workers ( where students had to choose to allow untested workers to deliver or to not allow them to deliver). Basically, the study found that those with High Agency felt worse about the outcome of 20 people dying than those with Low Agency.
+
+Because this was my first year project, the data was sorted and cleaned in SPSS. So, I had to import the data into R. 
 
 ```{r cars}
 library(tidyverse) 
@@ -17,7 +23,7 @@ library(ggeasy)
 library(ggplot2)
 library(skimr)
 library(haven)
-CulpAndCount <- read_sav("~/Downloads/Situational-assessment Study_February 15, 2023_22.16.sav")
+CulpAndCount <- read_sav("~/Documents/Situational-assessment Study_February 15, 2023_22.16.sav")
 
 #view class of data
 class(CulpAndCount)
@@ -32,6 +38,12 @@ head(CulpAndCount)
 
 #
 ```
+
+## 2x2x2 ANOVA
+
+After loading the data, I had to analyze the data I had in r by labeling the levels of IVs that I had. 
+
+I had 3 IVs, Scenario, Agency, and Choice. 
 
 ```{R 2x2x2 ANOVA}
 
@@ -48,10 +60,36 @@ labels = c("Low Agency", "High Agency"))
 CulpAndCount$Choice <- factor(CulpAndCount$Choice,
 levels = c(1,2),
 labels = c("Keep Close/Allow", "Reopen/Not Allow"))
+```
 
+After stating the levels, I can FINALLY make the visual. 
+
+```{R visual}
 
 CulpAndCount %>%
   ggplot(CulpAndCount, mapping = aes(x = Choice, y= Culpab, fill= Agency_L))+ facet_wrap(~Scenario)+geom_bar(stat="identity", position=position_dodge())+labs (x= "Choice", y= "Culpability")+labs(fill="Level of Agency")+ scale_fill_manual(values = c("black", "gold4"))+ labs(title= "2x2x2 ANOVA")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
 
 ```
 
+As you can see, Agency, choice, and sceanrio had NO interaction. Meaning that overall, participant felt fairly guilty about their situations. The study did not replicate. I believe that this may be due to a couple of things, 1- the study pool, 2- the way things are coded. 
+
+As you can see, Keep CLose/Allow and Reopen/Not Allow were coded togeather. Logically this doesnt make too much sense as Allow and Reopen are the same thing, so why are they not coded togeather? 
+
+## Recoding the data to MAKE SENSE 
+
+```{r redo}
+CulpAndCount$Choice2
+
+CulpAndCount$Choice22 <- factor(CulpAndCount$Choice2,
+levels = c(1,2),
+labels = c("Reopen/Allow", "Keep Close/Not Allow"))
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Choice22, y= Culpab, fill= Agency_L))+ facet_wrap(~Scenario)+geom_bar(stat="identity", position=position_dodge())+labs (x= "Choice", y= "Culpability")+labs(fill="Level of Agency")+ scale_fill_manual(values = c("black", "gold4"))+ labs(title= "2x2x2 ANOVA")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+
+```
+
+I thought it Would make a difference. But It seems not (unless I did it wrong)
+
+It seems as if this data set did not replicate anything from the previous study
+```

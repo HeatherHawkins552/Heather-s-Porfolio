@@ -1,16 +1,13 @@
 ---
-title: "Porf-4"
+title: "Color and Emotion Distribution"
 author: "Heather Hawkins"
 date: "2023-04-04"
-output:
-  pdf_document: default
-  html_document: default
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
  library(tidyverse) 
 library(ggeasy) 
-library(dsbox) 
 library(ggplot2)
 library(skimr)
 library(haven)
@@ -1222,4 +1219,4 @@ JEALOUSY_debbie %>%
   geom_bar(position = "dodge", stat = "summary", fun = "mean") + scale_fill_manual(values = c("black","blue","brown","gray","green","orange","pink","purple", "red","violet","white","yellow")) + labs (x= "Color", Y= "Scale", title = "Representation of JEALOUSY")
 ```
 
-GENDER PREFER
+

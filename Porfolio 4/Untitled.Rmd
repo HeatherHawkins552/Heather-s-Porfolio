@@ -1,0 +1,121 @@
+---
+title: "1st Year Project Exploration"
+author: "Heather Hawkins"
+date: "2023-03-15"
+output: html_document
+---
+
+## Loading Packages 
+
+```{r load}
+
+library(tidyverse) 
+library(ggeasy) 
+library(ggplot2)
+library(skimr)
+library(haven)
+```
+
+For this project, I decided to explore my dataset from my first year project a little more. 
+
+
+```{r data}
+CulpAndCount <- read_sav("~/Documents/Situational-assessment Study_February 15, 2023_22.16.sav")
+
+#view class of data
+class(CulpAndCount)
+
+
+#display dimensions of data frame
+dim(CulpAndCount)
+
+
+#view first six rows of data
+head(CulpAndCount)
+
+```
+
+
+This time, lets look at the actual counterfactual data. 
+In the orginigal data, students were asked to come up with a counterfactual and rate each "if" and "then" statment on a 7 point likert scale based on how likely they were to actually happen.
+
+(e.g. If I hurt myself, then I would get in trouble (rating how likely the "if" is to occur and how likely the then is to occur))
+
+The product of the If likely is then multipleyed by the then likley and results in a product of counterfactual potency. Participants with more than one counterfactuals had each CP totaled and then averaged, resulting in an average CP. 
+
+Lets Explore the effect Counterfactual Potency may have on Culpability. 
+
+```{r counterfactuals}
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Culpab, y= CPtotal))+geom_point()+labs (x= "Culpability", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+
+It seems as if there isnt alot there... But, it does seem as if CP dips as Culpability increases. Additionally, it seems as if most people feel averagely culpable and that those individuals have an average CP. 
+
+Lets move on and explore some other IVs, such as: 
+gender, race, age, situation, choice, agency on Counterfactual Potency
+
+```{r sit}
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Scenario, y= CPtotal, fill= Scenario))+geom_point()+labs (x= "Scenario", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+
+Seems as if CP is dispersed more within the Delivery Workers scenario. 
+
+```{r choice}
+
+CulpAndCount$Choice2 <- factor(CulpAndCount$Choice2,
+levels = c(1,2),
+labels = c("Keep Close/NotAllow", "Reopen/Allow"))
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Choice2, y= CPtotal))+geom_point()+labs (x= "Choice", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+
+Honestly, these seem the same. No difference. 
+
+
+```{r agency}
+
+CulpAndCount$Agency_Total <- factor(CulpAndCount$Agency_Total,
+levels = c(1,2),
+labels = c("Low Agency", "High Agency"))
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Agency_Total, y= CPtotal))+geom_point()+labs (x= "Agency", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+It seems that those with High Agency have a more concentrated and dense CP, meaning that there is less Deviation. 
+
+```{r gender}
+
+CulpAndCount$gender <- factor(CulpAndCount$gender,
+levels = c(0,1),
+labels = c("Male", "Female"))
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = gender, y= CPtotal))+geom_point()+labs (x= "Gender", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+
+This also seems to be more spread out among female participants, meaning there is more deviation.
+
+```{r age}
+
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = age, y= CPtotal))+geom_bar(stat="identity", position=position_dodge())+labs (x= "Age", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+
+Those who are 19 and 20 have higher CP than those who are 18, 21, and 22
+
+```{r race}
+
+CulpAndCount$race_n <- factor(CulpAndCount$race_n,
+levels = c(0,1,2,3,4),
+labels = c("White", "Black", "Asian", "Latin American", "N/A"))
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = race_n, y= CPtotal))+geom_point()+labs (x= "Race", y= "Counterfactual Potency")+labs(title= "Counterfactuals")+ theme(panel.background = element_blank())+ggeasy::easy_center_title()
+```
+
+We cant see much here because most of our data comes from white participants. 

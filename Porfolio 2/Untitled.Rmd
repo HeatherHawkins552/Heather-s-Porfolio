@@ -1,0 +1,58 @@
+---
+title: "SPSP Visual"
+author: "Heather Hawkins"
+date: "2023-02-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading data and items
+
+```{r cars}
+library(tidyverse) 
+library(mosaicData) 
+library(tidyverse) 
+library(ggplot2)
+library(skimr)
+library(haven)
+CulpAndCount <- read_sav("~/Downloads/Situational-assessment Study_February 15, 2023_22.16.sav")
+
+#view class of data
+class(CulpAndCount)
+
+
+#display dimensions of data frame
+dim(CulpAndCount)
+
+
+#view first six rows of data
+head(CulpAndCount)
+```
+
+```{R 2x2x2 ANOVA}
+
+#Labeling Gender
+
+CulpAndCount$Scenario <- factor(CulpAndCount$Scenario,
+levels = c(1,2),
+labels = c("Bars/Resturants", "Delivery Workers"))
+
+CulpAndCount$Agency_L <- factor(CulpAndCount$Agency_L,
+levels = c(1,2),
+labels = c("Low Agency", "High Agency"))
+
+CulpAndCount$Choice <- factor(CulpAndCount$Choice,
+levels = c(1,2),
+labels = c("Keep Close/Allow", "Reopen/Not Allow"))
+
+
+CulpAndCount %>%
+  ggplot(CulpAndCount, mapping = aes(x = Choice, y= Culpab, fill= Agency_L))+ facet_wrap(~Scenario)+geom_bar(stat="identity", position=position_dodge())+labs (x= "Choice", y= "Culpability")+labs(fill="Level of Agency") 
+
+
+```
+
+

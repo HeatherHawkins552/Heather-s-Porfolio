@@ -1,9 +1,10 @@
 ---
 title: "P5"
 author: "Heather Hawkins"
-date: "2023-03-30"
+date: "2023-03-18"
 output: html_document
 ---
+So I was looking online for some free datasets with locations to play around with, (Lat and Long), so I can practice the distance functions, and I found SEVERAL datasets based in Washington, DC that were made 6 years ago.
 
 
 ```{r load}
@@ -16,6 +17,9 @@ library(tidyverse)
 library(dsbox) 
 ```
 
+Two of these datasets caught my eye, so I wondered if the had any relation. As arbirtary as it sounds, I wondered if there were many places that sold Liquor near Homeless Shelters. 
+
+
 ```{r data}
 library(readxl)
 Liquor_License_Locations <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/Liquor License Locations.xlsx")
@@ -25,6 +29,8 @@ library(readxl)
 Homeless_Shelter_Locations <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/Homeless Shelter Locations.xlsx")
 View(Homeless_Shelter_Locations)
 ```
+
+First, I wanted to visually see this data, so I added a coloum to separate the locations and bound the dataset togeather. 
 
 ```{r ok}
 Location= c(1)
@@ -44,7 +50,12 @@ ggplot(HM_LQ2, mapping = aes(x = longitude,
                             color = Location)) +
   geom_point()
 ```
-It seems as if there are ALOT of Places that legaly sell Liquor in DC. 
+After looking at this plot,
+It seems as if there are ALOT of Places that legaly sell Liquor in DC. But not too many shelters. 
+
+Now lets see how many Liquor establishments are close to Homeless Shelters. 
+
+First lets do the equation. 
 
 
 ```{R haversine}
@@ -69,20 +80,21 @@ HM_LQ$latitude.y <- as.numeric(as.character(HM_LQ$latitude.y))
 HM_LQ$longitude.y <- as.numeric(as.character(HM_LQ$longitude.y))
 ```
 
+Now lets link them and set the equation. 
 
 ```{R Distances}
 HM_LQ <- HM_LQ %>% mutate(distance = haversine(longitude.x,latitude.x,longitude.y,latitude.y))
 ```
 ...
-### Exercise 7
-Calculate the minimum distance between a Denny’s and La Quinta for each Denny’s location. To do so we group by Denny’s locations and calculate a new variable that stores the information for the minimum distance.
-
 
 ```{R min-distance}
 HM_LQ_mindist <- HM_LQ %>%
   group_by(ADDRESS.x) %>%
   summarize(closest = min(distance))
 ```
+....
+
+Now lets see this happen. 
 
 ```{R Final-Distance}
 view(HM_LQ_mindist)
@@ -96,3 +108,8 @@ HM_LQ_mindist %>%
 ```
 
 Athough it is blank, this information HAS told us that there are 61 locations that are very close to each other. 
+
+This is most likely due to the number of Liquor establishments (1984) compared to the number of Homeless Shelters (64).
+
+OF COURSE so many liquor stores are near homeless shelters in DC... 
+There are so many liqour stores in DC in general!

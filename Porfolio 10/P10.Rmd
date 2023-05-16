@@ -1,0 +1,170 @@
+---
+title: "Thesis Stuff"
+author: "Heather Hawkins"
+date: "2023-05-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r load-packages, message = FALSE}
+library(rvest)
+library(skimr)
+library(glue)
+library(tidyverse) 
+library(usethis)
+library(stringi)
+library(robotstxt)
+```
+
+# Lets filter some data!!
+
+For my thesis, I'm interested in counterfactuals and moral thinking.
+This study was basic, as I only asked students to either come up with a counterfactual after thinking about a negative event, or not! The counterfactual were split between upward and downward counterfactuals.
+
+This is RAW data so lets clean it up! 
+
+```{r load}
+library(haven)
+Personal_Experiences_Assessment_Study_May_15_2023_19_29 <- read_sav("~/Documents/GitHub/Project-1/Porfolio 10/Personal+Experiences+Assessment+Study_May+15,+2023_19.29.sav")
+View(Personal_Experiences_Assessment_Study_May_15_2023_19_29)
+```
+First, lets delete some columns that are unneeded
+
+```{r del}
+Thesis_Data <- Personal_Experiences_Assessment_Study_May_15_2023_19_29
+
+Thesis_Data = subset(Thesis_Data, select = -c(StartDate, EndDate, Status, IPAddress, Progress, Finished, Duration__in_seconds_, RecordedDate, ResponseId, RecipientLastName, RecipientFirstName, RecipientEmail, ExternalReference, LocationLatitude, LocationLongitude, DistributionChannel, UserLanguage, AgreeParticipate, WTT_First_Click, WTT_Last_Click, WTT_Page_Submit, WTT_Click_Count, id) )
+
+```
+
+Now we need to add the number of counterfactuals for each condition
+
+```{r add}
+UP_Coun_Num = c(0, 0, 5, 0, 5, 0, 0, 5, 0, 0, 0, 2, 0, 4, 0, 0, 3, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 3, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 0, 5, 0, 1, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 5, 3, 0, 5, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5, 0, 0, 1, 2, 0, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0, 0)
+
+DOWN_Coun_Num = c(0, 0, 0, 4, 0, 0, 0, 0, 2, 0, 4, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 2, 0, 5, 0, 2, 0, 0, 5, 0, 0, 0, 0, 0, 2, 5, 0, 0, 0, 0, 2, 5, 0, 0, 2, 0, 0, 0, 0, 0, 4, 0, 0, 3, 0, 2, 0, 2, 0, 0, 3, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 5, 0, 0, 5, 0)
+
+#adding to data frame 
+
+Thesis_Data <- data.frame(Thesis_Data, UP_Coun_Num, DOWN_Coun_Num) 
+
+# Now we need to set the individuals that are not in that condition as 0
+
+Thesis_Data <- Thesis_Data %>% mutate(FL_18_DO_UP_CTP = ifelse(is.na(FL_18_DO_UP_CTP), 0, FL_18_DO_UP_CTP))
+
+Thesis_Data <- Thesis_Data %>% mutate(FL_18_DO_DW_CFTP = ifelse(is.na(FL_18_DO_DW_CFTP), 0, FL_18_DO_DW_CFTP))
+
+Thesis_Data <- Thesis_Data %>% mutate(FL_18_DO_WT = ifelse(is.na(FL_18_DO_WT), 0, FL_18_DO_WT))
+
+
+# Rename these
+
+colnames(Thesis_Data)[colnames(Thesis_Data) == "FL_18_DO_DW_CFTP"] ="Downward_Participants"
+
+colnames(Thesis_Data)[colnames(Thesis_Data) == "FL_18_DO_UP_CTP"] ="Upward_Participants"
+
+colnames(Thesis_Data)[colnames(Thesis_Data) == "FL_18_DO_WT"] ="Control_Participants"
+
+
+# Recode and Merge
+
+Thesis_Data$Participants[Thesis_Data$Upward_Participants=="1"] <- "1"
+Thesis_Data$Participants[Thesis_Data$Downward_Participants=="1"] <- "2"
+Thesis_Data$Participants[Thesis_Data$Control_Participants=="1"] <- "3"
+
+
+#Now we need to add for the number of Counterfactuals
+
+Thesis_Data <- Thesis_Data %>% mutate(Count_Num = UP_Coun_Num + DOWN_Coun_Num)
+
+#Need to Multiply for CP
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_1 = CTR_IF1 * CTR_TH1)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_2 = CTR_IF2 * CTR_TH2)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_3 = CTR_IF3 * CTR_TH3)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_4 = CTR_IF4 * CTR_TH4)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_5 = CRT_IF5 * CTR_TH5)
+
+#Divide for Total
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_1_Tot = CF_1 / Count_Num)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_2_Tot = CF_2 / Count_Num)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_3_Tot = CF_3 / Count_Num)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_4_Tot = CF_4 / Count_Num)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_5_Tot = CF_5 / Count_Num)
+
+#Add All
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_Tot = CF_5 + CF_4 + CF_3 + CF_4 + CF_5)
+
+Thesis_Data <- Thesis_Data %>% mutate(CF_Tot_All = CF_Tot / 5)
+
+# Affect Total
+
+Thesis_Data <- Thesis_Data %>% mutate(Postitive_Affect = PANAS_1 + PANAS_3 + PANAS_5 + PANAS_9 + PANAS_10 + PANAS_12 + PANAS_14 + PANAS_16 + PANAS_17 + PANAS_19)
+
+Thesis_Data <- Thesis_Data %>% mutate(Negative_Affect = PANAS_2 + PANAS_4 + PANAS_6 + PANAS_7 + PANAS_8 + PANAS_11 + PANAS_13 + PANAS_15 + PANAS_18 + PANAS_20)
+
+```
+
+Now, Lets view some data. 
+
+```{r testing}
+
+mean(Thesis_Data$CF_Tot_All, na.rm = T)
+mean_culp_all <- mean(Thesis_Data$CF_Tot_All)
+mean_culp_all
+
+```
+
+Mean CP is 32.14- meaning that CP is fairly normal overall (0-60 range)
+
+
+```{r testing6}
+
+mean(Thesis_Data$Postitive_Affect, na.rm = T)
+mean_pos_Affect <- mean(Thesis_Data$Postitive_Affect)
+mean_pos_Affect
+
+```
+
+
+```{r testing3}
+
+mean(Thesis_Data$Negative_Affect, na.rm = T)
+mean_neg_Affect <- mean(Thesis_Data$Negative_Affect)
+mean_neg_Affect
+
+```
+
+Postitive affect overall is higher than negative affect, which is good :)
+
+Now lets compare CP to Positive Affect and Negative Affect for each condition
+
+
+```{r testing9}
+Thesis_Data %>%
+  ggplot(Thesis_Data, mapping = aes(x = CF_Tot_All, y= Postitive_Affect, color= Participants))+ geom_point() +labs (x= "Counterfactual Potency", y= "Positive Affect")+labs(color="Type of Participant")+ labs(title= "Affect of Counterfactuals on Positive Affect")+ scale_color_discrete(name = "Type of Participant", labels = c("Upward", "Downward", "Control"))
+
+```
+
+It seems as if those with higher positive affect had lower CP scores, meaning that those who felt alright about the situation afterwards believed their own counterfactuals less. 
+
+```{r testing4}
+Thesis_Data %>%
+  ggplot(Thesis_Data, mapping = aes(x = CF_Tot_All, y= Negative_Affect, color= Participants))+ geom_point() +labs (x= "Counterfactual Potency", y= "Negative Affect")+labs(color="Type of Participant")+ labs(title= "Affect of Counterfactuals on Negative Affect")+ scale_color_discrete(name = "Type of Participant", labels = c("Upward", "Downward", "Control"))
+
+```
+
+The affect seems to have shift just a liiitttllleee bit here. It seems fairly average on both sides. Average NEgative Affect= Average CP. 
+
+I believe this has helped me look at my data a little bit (especially after the clean up)! 

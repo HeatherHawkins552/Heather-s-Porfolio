@@ -1,9 +1,11 @@
 ---
-title: "Thesis Stuff"
+title: "Thesis Stuff Part.2"
 author: "Heather Hawkins"
 date: "2023-04-30"
 output: html_document
 ---
+
+Let's continue with my thesis data!!
 
 ```{r load-packages, message = FALSE}
 library(rvest)
@@ -15,7 +17,6 @@ library(stringi)
 library(robotstxt)
 ```
 
-# I'm joking, none of the mtg sites will let me scrape more, so im moving on :)
 
 Lets filter some data!!
 

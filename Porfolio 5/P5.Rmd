@@ -1,7 +1,7 @@
 ---
 title: "P5"
 author: "Heather Hawkins"
-date: "2023-05-15"
+date: "2023-03-30"
 output: html_document
 ---
 
@@ -12,14 +12,87 @@ library(stringr)
 library(ggplot2)
 library(scales)
 library(tidyr)
+library(tidyverse) 
+library(dsbox) 
 ```
 
 ```{r data}
 library(readxl)
-blood_pressure <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/blood_pressure.xls")
-View(blood_pressure)
+Liquor_License_Locations <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/Liquor License Locations.xlsx")
+View(Liquor_License_Locations)
+
+library(readxl)
+Homeless_Shelter_Locations <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/Homeless Shelter Locations.xlsx")
+View(Homeless_Shelter_Locations)
 ```
 
 ```{r ok}
+Location= c(1)
 
+Hm <- cbind(Homeless_Shelter_Locations, Location)
+
+Location= c(2)
+
+Lq <- cbind(Liquor_License_Locations, Location)
+
+HM_LQ <- full_join(Hm, Lq, by = "Location")
+
+HM_LQ2 <- full_join(Hm, Lq)
+
+ggplot(HM_LQ2, mapping = aes(x = longitude,
+                            y = latitude,
+                            color = Location)) +
+  geom_point()
 ```
+It seems as if there are ALOT of Places that legaly sell Liquor in DC. 
+
+
+```{R haversine}
+haversine <- function(long1, lat1, long2, lat2, round = 3) {
+  
+  long1 = long1 * pi / 180
+  lat1  = lat1  * pi / 180
+  long2 = long2 * pi / 180
+  lat2  = lat2  * pi / 180
+  
+  R = 6371 
+  
+  a = sin((lat2 - lat1)/2)^2 + cos(lat1) * cos(lat2) * sin((long2 - long1)/2)^2
+  d = R * 2 * asin(sqrt(a))
+  
+  return( round(d,round) ) 
+}
+
+HM_LQ$latitude.x <- as.numeric(as.character(HM_LQ$latitude.x))
+HM_LQ$longitude.x <- as.numeric(as.character(HM_LQ$longitude.x))
+HM_LQ$latitude.y <- as.numeric(as.character(HM_LQ$latitude.y))
+HM_LQ$longitude.y <- as.numeric(as.character(HM_LQ$longitude.y))
+```
+
+
+```{R Distances}
+HM_LQ <- HM_LQ %>% mutate(distance = haversine(longitude.x,latitude.x,longitude.y,latitude.y))
+```
+...
+### Exercise 7
+Calculate the minimum distance between a Denny’s and La Quinta for each Denny’s location. To do so we group by Denny’s locations and calculate a new variable that stores the information for the minimum distance.
+
+
+```{R min-distance}
+HM_LQ_mindist <- HM_LQ %>%
+  group_by(ADDRESS.x) %>%
+  summarize(closest = min(distance))
+```
+
+```{R Final-Distance}
+view(HM_LQ_mindist)
+
+HM_LQ_mindist %>%
+  ggplot(aes(x=closest))+
+  geom_bar()+
+  labs(title = "Closest Distance between Homeless Shelter and Places with Liqour Licenses",
+       x="Distance in kilometers",
+       y="Number of locations")
+```
+
+Athough it is blank, this information HAS told us that there are 61 locations that are very close to each other. 

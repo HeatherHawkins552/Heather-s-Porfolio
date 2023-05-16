@@ -1,30 +1,41 @@
 ---
-title: "P10"
+title: "Thesis Stuff"
 author: "Heather Hawkins"
 date: "2023-05-15"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r load-packages, message = FALSE}
+library(rvest)
+library(skimr)
+library(glue)
+library(tidyverse) 
+library(usethis)
+library(stringi)
+library(robotstxt)
 ```
 
-## R Markdown
+# Lets filter some data!!
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+For my thesis, I'm interested in counterfactuals and moral thinking.
+This study was basic, as I only asked students to either come up with a counterfactual after thinking about a negative event, or not! The counterfactual were split between upward and downward counterfactuals.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+This is RAW data so lets clean it up! 
 
-```{r cars}
-summary(cars)
+```{r load}
+library(haven)
+Personal_Experiences_Assessment_Study_May_15_2023_19_29 <- read_sav("~/Documents/GitHub/Project-1/Porfolio 10/Personal+Experiences+Assessment+Study_May+15,+2023_19.29.sav")
+View(Personal_Experiences_Assessment_Study_May_15_2023_19_29)
+```
+First, lets delete some columns that are unneeded
+
+```{r del}
+Thesis_Data <- Personal_Experiences_Assessment_Study_May_15_2023_19_29
+
+Thesis_Data = subset(Thesis_Data, select = -c(StartDate, EndDate, Status, IPAddress, Progress, Finished, Duration__in_seconds_, RecordedDate, ResponseId, RecipientLastName, RecipientFirstName, RecipientEmail, ExternalReference, LocationLatitude, LocationLongitude, DistributionChannel, UserLanguage, AgreeParticipate, WTT_First_Click, WTT_Last_Click, WTT_Page_Submit, WTT_Click_Count, id) )
+
+
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

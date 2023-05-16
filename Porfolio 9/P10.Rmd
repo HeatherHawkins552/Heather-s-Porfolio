@@ -1,0 +1,174 @@
+---
+title: "Thesis Stuff P.2"
+author: "Heather Hawkins"
+date: "2023-04-30"
+output:
+  html_document: default
+---
+
+Let's do some testing with the Thesis Data!!
+
+```{r load-packages, message = FALSE}
+library(rvest)
+library(skimr)
+library(glue)
+library(tidyverse) 
+library(usethis)
+library(stringi)
+library(robotstxt)
+library(broom)
+library(openintro)
+```
+
+Loading 1st :)
+
+```{r }
+library(readxl)
+Porfolio_10_Thesis_Data <- read_excel("~/Documents/GitHub/Project-1/Porfolio 10/Porfolio 10:Thesis Data.xls")
+View(Porfolio_10_Thesis_Data)
+
+Thesis_Data <- Porfolio_10_Thesis_Data
+```
+
+Lets start with a linear regression on Counterfactual Potency predicting Affect
+
+
+
+```{r n}
+
+
+Thesis_Data <- Thesis_Data %>% mutate(Postitive_Affect = ifelse(is.na(Postitive_Affect), 0, Postitive_Affect))
+
+Thesis_Data <- Thesis_Data %>% mutate(Negative_Affect = ifelse(is.na(Negative_Affect), 0, Negative_Affect))
+
+                               
+Thesis_Data[is.na(Thesis_Data) | Thesis_Data == "Inf"] = NA
+
+lm(Postitive_Affect~ CF_Tot_All, data= Thesis_Data)
+summary(M_CP) 
+
+lm(CF_Tot_All ~ Negative_Affect, data = Thesis_Data)
+summary(M_CP)
+
+```
+
+
+For Positive Affect: 
+
+y = 23.80 + 0.301(Pos_aff)
+
+The r^2 is 0.016 and the adjusted r^2 is -0.017
+
+This means that for every unit increase in Positive Affect, there is a 0.301 increase in CP
+
+(meaning that those who feel better are better affected by counterfactuals)
+
+For Negative Affect: 
+
+y = 32.67 + -0.118(neg_aff)
+
+The r^2 is 0.025 and the adjusted r^2 is -0.031
+
+This means that for every unit increase in Negative Affect, there is a -0.118 decrease in CP
+
+(meaning that those who feel worse are less affected by counterfactuals)
+
+Although this regression shows us a trend, they are both non significant :(
+------------------------------
+
+Let's try a multiple regression on these factors!!! 
+
+```{r multi}
+M_CP <- lm(CF_Tot_All ~ Postitive_Affect + Negative_Affect, data = Thesis_Data)
+summary(M_CP)
+```
+
+
+I didn't expect much of a difference, but oof... the p value is worse. (0.4 for positive and 0.59 for negative)
+
+Anyways, let's evaluate the regression. 
+
+y = 26.73 + 0.39(Pos_aff) - 0.25(neg_aff)
+
+The r^2 is 0.026 and the adjusted r^2 is -0.041
+
+I mean... the numbers are stronger?? :'( 
+
+This equation shows that for every unit increase in Positive Affect, there is a 0.39 increase in CP.
+
+It also shows that for every unit increase in Negative Affect, there is a 0.25 decrease in CP..
+
+The r^2 shows us that only 2.6% variation in CP can be explained by Positive affect and Negative affect. 
+
+This still isn't alot at all. Especially with the high p value. 
+------------------------------------------
+Lets Continue with a linear regression on Counterfactual Type predicting Affect
+
+(Remember 1= Upward, 2= Downward, 3= Control)
+
+```{r con}
+M_PP <- lm(Postitive_Affect ~ Participants, data = Thesis_Data)
+summary(M_CP)
+
+
+M_PN <- lm(Negative_Affect ~ Participants, data = Thesis_Data)
+summary(M_CP)
+```
+
+Idk what happened to the first participants...
+
+Still non-sig tho :)
+
+For Positive Affect: 
+
+y = 27.3 + 1.57(part2) -1.7(part3)
+
+The r^2 is 0.023 and the adjusted r^2 is 0.001
+
+This means that for most Downward Counterfactual Participants, there is a 1.57 increase in Positive Affect. For Control Participants, there is a -1.7 decrease in Positive Affect. 
+
+(meaning that Downward Counterfactual Participants feel better than Control Participants)
+
+For Negative Affect: 
+
+y = 19.8 + 1.57(part2) + 1.46(part3)
+
+The r^2 is 0.009 and the adjusted r^2 is 0.014
+
+This means that for most Downward Counterfactual Participants, there is a 1.6 increase in Negative Affect. For Control Participants, there is a 1.5 increase in Negative Affect. 
+
+(meaning that Downward Counterfactual Participants and Control Participants both feel similarly bad)
+
+------------------------------
+
+#Although we pretty much know the answer, let's hypothesis test. 
+
+```{r means}
+
+mean(Thesis_Data$Negative_Affect, na.rm = T)
+mean_Neg_Aff_Type <- subset(Thesis_Data, Participants= c("1, 2, 3"))$Negative_Affect
+mean_Neg_Aff_Type
+
+mean(Thesis_Data$Postitive_Affect, na.rm = T)
+mean_Pos_Aff_Type <- subset(Thesis_Data, Participants= c("1, 2, 3"))$Postitive_Affect
+mean_Pos_Aff_Type
+
+obs_diff_mean <- mean(mean_Neg_Aff_Type) - mean(mean_Pos_Aff_Type)
+obs_diff_mean
+
+```
+H0: mean_neg&pos = mean_neg&pos
+
+H1: mean_neg&pos ≠ mean_neg&pos
+
+I mean.... they are different! 
+
+
+``{r final}
+t.test(Thesis_Data$Participants ~ Thesis_Data$Postitive_Affect)
+
+t.test(Thesis_Data$Participants ~ Thesis_Data$Negative_Affect)
+``
+
+I have more than 2 levels... so this doesn't work. I'm going to have to learn EVEN MORE in r in order to fully test this! 
+

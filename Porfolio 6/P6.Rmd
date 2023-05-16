@@ -1,90 +1,115 @@
 ---
-title: "MTG list"
+title: "P6"
 author: "Heather Hawkins"
-date: "2023-03-22"
+date: "2023-03-18"
 output: html_document
 ---
+So I was looking online for some free datasets with locations to play around with, (Lat and Long), so I can practice the distance functions, and I found SEVERAL datasets based in Washington, DC that were made 6 years ago.
 
-```{r load-packages, message = FALSE}
-library(rvest)
-library(skimr)
-library(glue)
+
+```{r load}
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(scales)
+library(tidyr)
 library(tidyverse) 
-library(usethis)
-library(robotstxt)
+library(dsbox) 
 ```
 
-Because I love Magic the Gathering and I want to look at the new set, I decided to scrape the tcgplayer page of info to look at cards at a glance. 
+Two of these datasets caught my eye, so I wondered if the had any relation. As arbirtary as it sounds, I wondered if there were many places that sold Liquor near Homeless Shelters. 
 
-```{r setup, include=FALSE}
 
-# First we need to set the url
+```{r data}
+library(readxl)
+Liquor_License_Locations <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/Liquor License Locations.xlsx")
+View(Liquor_License_Locations)
 
-url <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page=1"
+library(readxl)
+Homeless_Shelter_Locations <- read_excel("~/Documents/GitHub/Project-1/Porfolio 5/Homeless Shelter Locations.xlsx")
+View(Homeless_Shelter_Locations)
+```
 
-#now make a function for this
+First, I wanted to visually see this data, so I added a coloum to separate the locations and bound the dataset togeather. 
 
-scrape_page <- function(url) {
+```{r ok}
+Location= c(1)
 
-  #Then learn to read the url
+Hm <- cbind(Homeless_Shelter_Locations, Location)
+
+Location= c(2)
+
+Lq <- cbind(Liquor_License_Locations, Location)
+
+HM_LQ <- full_join(Hm, Lq, by = "Location")
+
+HM_LQ2 <- full_join(Hm, Lq)
+
+ggplot(HM_LQ2, mapping = aes(x = longitude,
+                            y = latitude,
+                            color = Location)) +
+  geom_point()
+```
+After looking at this plot,
+It seems as if there are ALOT of Places that legaly sell Liquor in DC. But not too many shelters. 
+
+Now lets see how many Liquor establishments are close to Homeless Shelters. 
+
+First lets do the equation. 
+
+
+```{R haversine}
+haversine <- function(long1, lat1, long2, lat2, round = 3) {
   
-page <- read_html(url)
-
-# I want to know the title, rarity, and price of each card, so I used Selector Gadget to grab the html.nodes.
-
-titles <- page %>%
-  html_nodes(".search-result__title")  %>%
-  html_node("") %>%
-  html_text() %>% 
-  str_squish()
-
-rarity <- page %>%
-  html_nodes(".search-result__rarity span:nth-child(1)") %>%
-  html_text()
-
-price <- page %>%
-  html_nodes(".inventory__price-with-shipping") %>%
-  html_text()
-
-#It seemed to have collected it so lets create a tibble
-
-  tibble(title = titles, 
-         rarity = rarity,
-         price = price)
+  long1 = long1 * pi / 180
+  lat1  = lat1  * pi / 180
+  long2 = long2 * pi / 180
+  lat2  = lat2  * pi / 180
   
+  R = 6371 
+  
+  a = sin((lat2 - lat1)/2)^2 + cos(lat1) * cos(lat2) * sin((long2 - long1)/2)^2
+  d = R * 2 * asin(sqrt(a))
+  
+  return( round(d,round) ) 
 }
 
-# Now lets grab all of the pages in this set
-
-root <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page="
-numbers <- seq(from = 1, to = 23, by = 1)
-urls <- glue("{root}{numbers}")
-
-#and now make a dataframe
-phyrexia_mtg.df <- map_dfr(urls, scrape_page)
-
-write_csv(phyrexia_mtg.df, file = "phyrexia_mtg.csv")
-
-phyrexia_mtg <- read_csv("phyrexia_mtg.csv")
-
+HM_LQ$latitude.x <- as.numeric(as.character(HM_LQ$latitude.x))
+HM_LQ$longitude.x <- as.numeric(as.character(HM_LQ$longitude.x))
+HM_LQ$latitude.y <- as.numeric(as.character(HM_LQ$latitude.y))
+HM_LQ$longitude.y <- as.numeric(as.character(HM_LQ$longitude.y))
 ```
-...The dataframe is empty. Idk what happened. 
-Lets just try a single page. 
 
-```{r onepage}
+Now lets link them and set the equation. 
 
-root <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page="
-numbers1 <- seq(from = 1, to = 1, by = 1)
-urls1 <- glue("{root}{numbers1}")
-
-#and now make a dataframe
-phyrexia_mtg.df.1 <- map_dfr(urls, scrape_page)
-
-write_csv(phyrexia_mtg.df.1, file = "phyrexia_mtg.csv")
-
-phyrexia_mtg <- read_csv("phyrexia_mtg.csv")
+```{R Distances}
+HM_LQ <- HM_LQ %>% mutate(distance = haversine(longitude.x,latitude.x,longitude.y,latitude.y))
 ```
-Im gonna cry idk what happened. Its not grabbing the info.... I assume the website will not let me grab the info, or there is something else wrong. 
+...
 
-Idk :( Ill retry this in another project
+```{R min-distance}
+HM_LQ_mindist <- HM_LQ %>%
+  group_by(ADDRESS.x) %>%
+  summarize(closest = min(distance))
+```
+....
 
+Now lets see this happen. 
+
+```{R Final-Distance}
+view(HM_LQ_mindist)
+
+HM_LQ_mindist %>%
+  ggplot(aes(x=closest))+
+  geom_bar()+
+  labs(title = "Closest Distance between Homeless Shelter and Places with Liqour Licenses",
+       x="Distance in kilometers",
+       y="Number of locations")
+```
+
+Athough it is blank, this information HAS told us that there are 61 locations that are very close to each other. 
+
+This is most likely due to the number of Liquor establishments (1984) compared to the number of Homeless Shelters (64).
+
+OF COURSE so many liquor stores are near homeless shelters in DC... 
+There are so many liqour stores in DC in general!

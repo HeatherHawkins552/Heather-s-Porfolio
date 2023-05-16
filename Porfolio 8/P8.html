@@ -11,9 +11,9 @@
 
 <meta name="author" content="Heather Hawkins" />
 
-<meta name="date" content="2023-03-22" />
+<meta name="date" content="2023-03-30" />
 
-<title>MTG list</title>
+<title>MTG_part2</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,9 +350,9 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">MTG list</h1>
+<h1 class="title toc-ignore">MTG_part2</h1>
 <h4 class="author">Heather Hawkins</h4>
-<h4 class="date">2023-03-22</h4>
+<h4 class="date">2023-03-30</h4>
 
 </div>
 
@@ -363,32 +363,105 @@ library(glue)
 library(tidyverse) 
 library(usethis)
 library(robotstxt)</code></pre>
-<p>Because I love Magic the Gathering and I want to look at the new set,
-I decided to scrape the tcgplayer page of info to look at cards at a
-glance.</p>
-<p>…The dataframe is empty. Idk what happened. Lets just try a single
-page.</p>
-<pre class="r"><code>root &lt;- &quot;https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&amp;setName=phyrexia-all-will-be-one&amp;view=grid&amp;page=&quot;
-numbers1 &lt;- seq(from = 1, to = 1, by = 1)
-urls1 &lt;- glue(&quot;{root}{numbers1}&quot;)
+<div id="okay-last-one-failed-so-lets-try-something-different-lets-view-all-of-the-mtg-set-lists-and-scrape-them-from-something-that-is-not-tcg-player." class="section level2">
+<h2>Okay, last one failed, so lets try something different, lets view
+all of the MTG set lists and scrape them from something that is not tcg
+player.</h2>
+<p>``{r redo} urls &lt;- “<a href="https://scryfall.com/sets" class="uri">https://scryfall.com/sets</a>”</p>
+<p>#now make a function for this</p>
+<p>scrape_page &lt;- function(url) {</p>
+<p>#Then learn to read the url</p>
+<p>page &lt;- read_html(url)</p>
+<div id="this-time..-want-to-know-the-set-title-number-of-cards-in-the-set-and-the-date-it-was-released." class="section level3">
+<h3>This time.. want to know the set title, number of cards in the set,
+and the date it was released.</h3>
+<p>titles &lt;- page %&gt;% html_nodes(“.flexbox a”) %&gt;%
+html_node(““) %&gt;% html_text() %&gt;% str_squish()</p>
+<p>number &lt;- page %&gt;% html_nodes(“.flexbox+ td a”) %&gt;%
+html_text()</p>
+<p>date &lt;- page %&gt;% html_nodes(“.flexbox~ td+ td a”) %&gt;%
+html_text()</p>
+<p>tibble(set_title = titles, card_amount = number, date_released =
+date)</p>
+<p>}</p>
+<p>root &lt;- “<a href="https://scryfall.com/sets" class="uri">https://scryfall.com/sets</a>” numbers1 &lt;- seq(from = 1,
+to = 1, by = 1) urls1 &lt;- glue(“{root}{numbers1}”)</p>
+<p>#and now make a dataframe (ill cry if it doesnt work) mtg_sets.df
+&lt;- map_dfr(urls, scrape_page)</p>
+<p>write_csv(mtg_sets.df, file = “mtg_sets.csv”)</p>
+<p>mtg_sets &lt;- read_csv(“mtg_sets.csv”) ``</p>
+<hr />
+<p>I’m crying. Lets try something else.</p>
+<p>Let’s go big. Every card.</p>
+<p>But first lets start with the first page…</p>
+<pre class="r"><code>url_one &lt;- &quot;https://deckbox.org/games/mtg/cards?p=1&quot;
 
-#and now make a dataframe
-phyrexia_mtg.df.1 &lt;- map_dfr(urls, scrape_page)
+#now make a function for this
 
-write_csv(phyrexia_mtg.df.1, file = &quot;phyrexia_mtg.csv&quot;)
+scrape_page &lt;- function(url) {
 
-phyrexia_mtg &lt;- read_csv(&quot;phyrexia_mtg.csv&quot;)</code></pre>
-<pre><code>## Rows: 0 Columns: 3
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (3): title, rarity, price
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<p>Im gonna cry idk what happened. Its not grabbing the info…. I assume
-the website will not let me grab the info, or there is something else
-wrong.</p>
-<p>Idk :( Ill retry this in another project</p>
+  #Then learn to read the url
+  
+page &lt;- read_html(url)
+
+# This time.. want to know the set title, number of cards in the srt, and the date it was released.
+
+titles &lt;- page %&gt;%
+  html_nodes(&quot;.card_name&quot;)  %&gt;%
+  html_node(&quot;&quot;) %&gt;%
+  html_text() %&gt;% 
+  str_squish()
+
+price &lt;- page %&gt;%
+  html_nodes(&quot;..center+ .minimum_width&quot;) %&gt;%
+  html_text()
+
+type &lt;- page %&gt;%
+  html_nodes(&quot;td:nth-child(4)&quot;) %&gt;%
+  html_text()
+
+costandcolor &lt;- page %&gt;%
+  html_nodes(&quot;.minimum_width&quot;) %&gt;%
+  html_text()
+
+  tibble(card_title = titles, 
+         card_price = price,
+         card_type = type,
+         card_cost_and_color = costandcolor)
+  
+}
+
+
+root &lt;- &quot;https://deckbox.org/games/mtg/cards?p=&quot;
+numbers1 &lt;- seq(from = 1, to = 1, by = 25)
+urls1 &lt;- glue(&quot;{root}{numbers1}&quot;)</code></pre>
+</div>
+</div>
+<div id="works..-for-now." class="section level2">
+<h2>Works.. for now.</h2>
+</div>
+<div id="okay-this-didnt-work" class="section level2">
+<h2>okay this didnt work</h2>
+<p>(map_dfr(urls1,scrape_page) write_rds(mtg_cards.df, “mtg_cards.RDS”)
+mtg_cards&lt;-map_dfr(urls1,scrape_page) ——-</p>
+<p>So im going to use an xpath to scrape and create a dataset</p>
+<pre class="r"><code>xpath1 &lt;- &#39;//*[@id=&quot;show_simple_contents&quot;]/div/table&#39;
+
+mtg_cards &lt;- urls1 %&gt;%                
+  read_html() %&gt;%
+  html_nodes(xpath=xpath1) %&gt;%
+  html_table()  
+mtg_cards &lt;- mtg_cards[[1]]
+mtg_cards &lt;- mtg_cards[-1,] # Removing first row, which contains table headers
+
+
+mtg_cards &lt;- mtg_cards[,c(1,2,3,4)]          # Select column for Name, Price, Min Price, and Type
+names(mtg_cards) &lt;- c(&quot;Name&quot;, &quot;N/A&quot;, &quot;Min Price&quot;, &quot;Type&quot;)       # Adding column names (overall price got deleted somehow :())
+
+write_csv(mtg_cards, file = &quot;mtg_cards_first10.csv&quot;)</code></pre>
+<p>I got the first ten items!!! Now I can see this as a clear list. Lets
+do EVERYTHING next time!! :)</p>
+</div>
 
 
 

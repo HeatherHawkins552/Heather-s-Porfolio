@@ -1,9 +1,10 @@
 ---
-title: "MTG_part2"
+title: "MTG list"
 author: "Heather Hawkins"
-date: "2023-03-30"
+date: "2023-03-22"
 output: html_document
 ---
+
 ```{r load-packages, message = FALSE}
 library(rvest)
 library(skimr)
@@ -13,11 +14,13 @@ library(usethis)
 library(robotstxt)
 ```
 
-Okay, last one failed, so lets try something different, lets view all of the MTG set lists and scrape them from something that is not tcg player.
----------------------------------------
+Because I love Magic the Gathering and I want to look at the new set, I decided to scrape the tcgplayer page of info to look at cards at a glance. 
 
-``{r redo}
-urls <- "https://scryfall.com/sets"
+```{r setup, include=FALSE}
+
+# First we need to set the url
+
+url <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page=1"
 
 #now make a function for this
 
@@ -27,123 +30,61 @@ scrape_page <- function(url) {
   
 page <- read_html(url)
 
-### This time.. want to know the set title, number of cards in the set, and the date it was released.
+# I want to know the title, rarity, and price of each card, so I used Selector Gadget to grab the html.nodes.
 
 titles <- page %>%
-  html_nodes(".flexbox a")  %>%
+  html_nodes(".search-result__title")  %>%
   html_node("") %>%
   html_text() %>% 
   str_squish()
 
-number <- page %>%
-  html_nodes(".flexbox+ td a") %>%
+rarity <- page %>%
+  html_nodes(".search-result__rarity span:nth-child(1)") %>%
   html_text()
 
-date <- page %>%
-  html_nodes(".flexbox~ td+ td a") %>%
+price <- page %>%
+  html_nodes(".inventory__price-with-shipping") %>%
   html_text()
 
-  tibble(set_title = titles, 
-         card_amount = number,
-         date_released = date)
+#It seemed to have collected it so lets create a tibble
+
+  tibble(title = titles, 
+         rarity = rarity,
+         price = price)
   
 }
 
-root <- "https://scryfall.com/sets"
+# Now lets grab all of the pages in this set
+
+root <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page="
+numbers <- seq(from = 1, to = 23, by = 1)
+urls <- glue("{root}{numbers}")
+
+#and now make a dataframe
+phyrexia_mtg.df <- map_dfr(urls, scrape_page)
+
+write_csv(phyrexia_mtg.df, file = "phyrexia_mtg.csv")
+
+phyrexia_mtg <- read_csv("phyrexia_mtg.csv")
+
+```
+...The dataframe is empty. Idk what happened. 
+Lets just try a single page. 
+
+```{r onepage}
+
+root <- "https://www.tcgplayer.com/search/magic/phyrexia-all-will-be-one?productLineName=magic&setName=phyrexia-all-will-be-one&view=grid&page="
 numbers1 <- seq(from = 1, to = 1, by = 1)
 urls1 <- glue("{root}{numbers1}")
 
-#and now make a dataframe (ill cry if it doesnt work)
-mtg_sets.df <- map_dfr(urls, scrape_page)
+#and now make a dataframe
+phyrexia_mtg.df.1 <- map_dfr(urls, scrape_page)
 
-write_csv(mtg_sets.df, file = "mtg_sets.csv")
+write_csv(phyrexia_mtg.df.1, file = "phyrexia_mtg.csv")
 
-mtg_sets <- read_csv("mtg_sets.csv")
-``
-
------------------------------------------------
-
-I'm crying. Lets try something else. 
-
-Let's go big. Every card. 
-
-But first lets start with the first page...
-
-```{r another}
-url_one <- "https://deckbox.org/games/mtg/cards?p=1"
-
-#now make a function for this
-
-scrape_page <- function(url) {
-
-  #Then learn to read the url
-  
-page <- read_html(url)
-
-# This time.. want to know the set title, number of cards in the srt, and the date it was released.
-
-titles <- page %>%
-  html_nodes(".card_name")  %>%
-  html_node("") %>%
-  html_text() %>% 
-  str_squish()
-
-price <- page %>%
-  html_nodes("..center+ .minimum_width") %>%
-  html_text()
-
-type <- page %>%
-  html_nodes("td:nth-child(4)") %>%
-  html_text()
-
-costandcolor <- page %>%
-  html_nodes(".minimum_width") %>%
-  html_text()
-
-  tibble(card_title = titles, 
-         card_price = price,
-         card_type = type,
-         card_cost_and_color = costandcolor)
-  
-}
-
-
-root <- "https://deckbox.org/games/mtg/cards?p="
-numbers1 <- seq(from = 1, to = 1, by = 25)
-urls1 <- glue("{root}{numbers1}")
-
-
+phyrexia_mtg <- read_csv("phyrexia_mtg.csv")
 ```
-Works.. for now. 
-----------------------
-okay this didnt work 
---------
+Im gonna cry idk what happened. Its not grabbing the info.... I assume the website will not let me grab the info, or there is something else wrong. 
 
- (map_dfr(urls1,scrape_page)
-write_rds(mtg_cards.df, "mtg_cards.RDS")
-mtg_cards<-map_dfr(urls1,scrape_page)
--------
+Idk :( Ill retry this in another project
 
-So im going to use an xpath to scrape and create a dataset
-
-```{r okay}
-
-
-xpath1 <- '//*[@id="show_simple_contents"]/div/table'
-
-mtg_cards <- urls1 %>%                
-  read_html() %>%
-  html_nodes(xpath=xpath1) %>%
-  html_table()  
-mtg_cards <- mtg_cards[[1]]
-mtg_cards <- mtg_cards[-1,] # Removing first row, which contains table headers
-
-
-mtg_cards <- mtg_cards[,c(1,2,3,4)]          # Select column for Name, Price, Min Price, and Type
-names(mtg_cards) <- c("Name", "N/A", "Min Price", "Type")       # Adding column names (overall price got deleted somehow :())
-
-write_csv(mtg_cards, file = "mtg_cards_first10.csv")
-
-```
-
-I got the first ten items!!! Now I can see this as a clear list. Lets do EVERYTHING next time!! :)

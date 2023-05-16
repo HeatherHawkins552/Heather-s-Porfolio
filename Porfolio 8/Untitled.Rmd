@@ -1,22 +1,89 @@
 ---
-title: "P8"
+title: "Every MTG Card"
 author: "Heather Hawkins"
-date: "2023-05-15"
+date: "2023-04-07"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r load-packages, message = FALSE}
+library(rvest)
+library(skimr)
+library(glue)
+library(tidyverse) 
+library(usethis)
+library(robotstxt)
 ```
 
-## R Markdown
+```{r library}
+suppressWarnings(library(tidyverse))
+suppressWarnings(suppressMessages(library(rvest)))
+suppressWarnings(library(stringi))
+suppressWarnings(library(glue))
+suppressWarnings(library(robotstxt))
+```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+#Lets Finish what I failed! Lets see all the cards!
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r lets run this again}
+url_one <- "https://deckbox.org/games/mtg/cards?p=1"
 
-```{r cars}
-summary(cars)
+url_two <- "https://deckbox.org/games/mtg/cards?p=2"
+
+#now make a function for this
+
+scrape_page <- function(url){
+  
+page <- read_html(url)
+
+# This time.. want to know the card title, price, and type
+
+titles <- page %>%
+  html_nodes(".card_name")  %>%
+  html_node("") %>%
+  html_text() %>% 
+  str_squish()
+
+price <- page %>%
+  html_nodes("..center+ .minimum_width") %>%
+  html_text()
+
+type <- page %>%
+  html_nodes("td:nth-child(4)") %>%
+  html_text()
+
+  tibble(card_title = titles, 
+         card_price = price,
+         card_type = type)}
+
+
+root <- "https://deckbox.org/games/mtg/cards?p="
+numbers <- seq(from = 1, to = 975, by = 30)
+urls <- glue("{root}{numbers}")
+
+map_dfr(urls, scrape_page)
+
+mtg_cards.df <- map_dfr(urls,scrape_page)
+
+```
+
+```{r more all cards}
+xpath1 <- '//*[@id="show_simple_contents"]/div/table'
+xpath2
+
+mtg_cards <- urls1 %>%                
+  read_html() %>%
+  html_nodes(xpath=xpath1) %>%
+  html_table()  
+mtg_cards <- mtg_cards[[1]]
+mtg_cards <- mtg_cards[-1,] # Removing first row, which contains table headers
+
+
+mtg_cards <- mtg_cards[,c(1,2,3,4)]          # Select column for Name, Price, Min Price, and Type
+names(mtg_cards) <- c("Name", "N/A", "Min Price", "Type")       # Adding column names (overall price got deleted somehow :())
+
+write_csv(mtg_cards, file = "mtg_cards_first10.csv")
+
+
 ```
 
 ## Including Plots
